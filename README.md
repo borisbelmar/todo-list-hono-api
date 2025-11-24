@@ -4,14 +4,15 @@ API REST completa construida con Hono, TypeScript, Cloudflare Workers y D1 Datab
 
 ## 🚀 Características
 
-- ✅ **Autenticación JWT** con bcrypt (scrypt-js)
+- ✅ **Autenticación JWT** con scrypt-js para hashing de passwords
 - 🔒 **Sistema de usuarios** con registro y login
-- 📝 **CRUD de Todos** privado por usuario
-- 🗄️ **Cloudflare D1** como base de datos
+- 📝 **CRUD de Todos** privado por usuario (aislamiento de datos)
+- 🗄️ **Cloudflare D1** como base de datos serverless (SQLite)
 - ✨ **Validación con Zod** en todas las rutas
 - 🎯 **TypeScript** con ESLint (Standard JS)
 - ⚡ **Desplegable en Cloudflare Workers**
-- 🔑 **Manejo seguro de secretos**
+- 🔑 **Manejo seguro de secretos** con variables de entorno
+- 🚀 **CI/CD** con GitHub Actions para despliegue automático
 
 ## 📋 Stack Tecnológico
 
@@ -311,13 +312,17 @@ Authorization: Bearer {token}
 
 ### Configurar Secretos en Producción
 
+Los secretos deben configurarse **una sola vez** en Cloudflare Workers:
+
 ```bash
 # JWT Secret (generar uno seguro)
 npx wrangler secret put JWT_SECRET
 
-# Password Salt (generar uno seguro)
+# Password Salt (generar uno seguro - NUNCA cambiar después)
 npx wrangler secret put PASSWORD_SALT
 ```
+
+**⚠️ IMPORTANTE:** Una vez configurados, los despliegues automáticos (GitHub Actions) usarán estos secretos.
 
 ### Generar Secretos Seguros
 
@@ -344,20 +349,50 @@ npx wrangler d1 execute basic-hono-todos-db --remote --file=./migrations/002_cre
 npx wrangler d1 execute basic-hono-todos-db --remote --file=./migrations/003_add_user_id_to_todos.sql
 ```
 
-### Deploy
+### Deploy Manual
 
 ```bash
 yarn deploy
 ```
 
+### Deploy Automático con GitHub Actions
+
+El proyecto incluye un workflow de GitHub Actions que despliega automáticamente a Cloudflare Workers en cada push a la rama `main`.
+
+**Configuración requerida (una sola vez):**
+
+1. Obtén tu API Token de Cloudflare:
+   - Ve a [Cloudflare Dashboard](https://dash.cloudflare.com/profile/api-tokens)
+   - Crea un token con permisos "Edit Cloudflare Workers"
+
+2. Obtén tu Account ID:
+   ```bash
+   npx wrangler whoami
+   ```
+
+3. Configura los secretos en GitHub:
+   - Ve a `Settings > Secrets and variables > Actions`
+   - Agrega los siguientes secretos:
+     - `CLOUDFLARE_API_TOKEN`: Tu API token de Cloudflare
+     - `CLOUDFLARE_ACCOUNT_ID`: Tu Account ID
+
+4. El workflow se ejecutará automáticamente en cada push a `main`
+
+**Monitoreo del deployment:**
+- Ve a la pestaña "Actions" en tu repositorio de GitHub
+- Verifica el estado del workflow "Deploy to Cloudflare Workers"
+
 ### Verificar Deployment
 
 ```bash
-# Listar secretos configurados
+# Listar secretos configurados en Cloudflare
 npx wrangler secret list
 
 # Ver logs en tiempo real
 npx wrangler tail
+
+# Verificar estado del Worker
+curl https://basic-hono-api.borisbelmarm.workers.dev/health
 ```
 
 ---
