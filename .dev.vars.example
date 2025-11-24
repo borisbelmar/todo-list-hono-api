@@ -1,0 +1,2 @@
+JWT_SECRET=dev-jwt-secret-change-in-production-min-32-chars
+PASSWORD_SALT=dev-password-salt-change-in-production

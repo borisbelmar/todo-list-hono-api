@@ -1,0 +1,16 @@
+name = "basic-hono-api"
+main = "src/index.ts"
+compatibility_date = "2025-11-24"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "basic-hono-todos-db"
+database_id = "0325a644-dfd4-4af8-9ace-c38be14fa187"
+
+[env.production]
+name = "basic-hono-api-production"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "basic-hono-todos-db"
+database_id = "0325a644-dfd4-4af8-9ace-c38be14fa187"
