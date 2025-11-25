@@ -20,7 +20,6 @@ export const uploadImageController = async (c: Context<{ Bindings: Bindings; Var
         error: 'Se requiere una imagen',
       }, 400)
     }
-    const userId = c.get('userId')
 
     // Validar que sea una imagen
     if (!image.type.startsWith('image/')) {
@@ -29,6 +28,17 @@ export const uploadImageController = async (c: Context<{ Bindings: Bindings; Var
         error: 'El archivo debe ser una imagen',
       }, 400)
     }
+
+    // Validar tamaño máximo (5MB)
+    const maxSize = 5 * 1024 * 1024 // 5MB en bytes
+    if (image.size > maxSize) {
+      return c.json({
+        success: false,
+        error: 'La imagen no puede pesar más de 5MB',
+      }, 400)
+    }
+
+    const userId = c.get('userId')
 
     // Generar nombre único para la imagen
     const extension = image.name.split('.').pop()
