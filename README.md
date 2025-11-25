@@ -28,6 +28,7 @@ API REST completa construida con Hono, TypeScript, Cloudflare Workers y D1 Datab
 - **Almacenamiento:** Cloudflare R2 (imágenes)
 - **Autenticación:** JWT (jose) + scrypt-js
 - **Validación:** Zod + @hono/zod-openapi
+- **Testing:** Vitest 3.2.4 con UI y Coverage (v8)
 - **IDs:** nanoid
 - **Linting:** ESLint (Standard JS)
 - **Package Manager:** Yarn
@@ -118,6 +119,12 @@ npx wrangler d1 execute basic-hono-todos-db --local --file=./migrations/003_add_
 ```bash
 # Desarrollo local
 yarn dev
+
+# Testing
+yarn test              # Ejecutar tests en watch mode
+yarn test --run        # Ejecutar tests una vez
+yarn test:ui           # Abrir UI interactivo con coverage
+yarn test:coverage     # Generar reporte de coverage
 
 # Linting
 yarn lint
@@ -544,6 +551,102 @@ npx wrangler tail
 
 # Verificar estado del Worker
 curl https://basic-hono-api.borisbelmarm.workers.dev/health
+```
+
+---
+
+## 🧪 Testing
+
+### Suite de Tests
+
+El proyecto incluye una suite completa de tests con **143 tests** y **88.83% de coverage**:
+
+```bash
+# Ejecutar todos los tests
+yarn test --run
+
+# Modo watch (desarrollo)
+yarn test
+
+# UI interactivo con coverage
+yarn test:ui
+```
+
+### Estructura de Tests
+
+```
+src/
+├── controllers/
+│   ├── auth/
+│   │   ├── login.controller.test.ts       # 6 tests
+│   │   └── register.controller.test.ts    # 7 tests
+│   ├── todo/
+│   │   ├── create.controller.test.ts      # 6 tests
+│   │   ├── list.controller.test.ts        # 7 tests
+│   │   ├── get.controller.test.ts         # 6 tests
+│   │   ├── update.controller.test.ts      # 4 tests
+│   │   ├── patch.controller.test.ts       # 7 tests
+│   │   └── delete.controller.test.ts      # 3 tests
+│   └── image/
+│       ├── upload.controller.test.ts      # 5 tests
+│       ├── get.controller.test.ts         # 3 tests
+│       └── delete.controller.test.ts      # 3 tests
+├── middleware/
+│   └── auth.middleware.test.ts            # 7 tests
+├── schemas/
+│   ├── auth.schema.test.ts                # 12 tests
+│   ├── todo.schema.test.ts                # 22 tests
+│   ├── image.schema.test.ts               # 10 tests
+│   └── common.schema.test.ts              # 6 tests
+├── utils/
+│   ├── crypto.test.ts                     # 13 tests
+│   └── jwt.test.ts                        # 16 tests
+└── test/
+    ├── mocks/
+    │   ├── d1.mock.ts                     # Mock D1Database
+    │   └── r2.mock.ts                     # Mock R2Bucket
+    └── helpers/
+        └── context.helper.ts              # Helper para Hono context
+```
+
+### Coverage por Módulo
+
+| Módulo | Statements | Branches | Functions | Lines |
+|--------|-----------|----------|-----------|-------|
+| **Controllers** | 88.31% | 81.70% | 100% | 88.31% |
+| **Middleware** | 100% | 100% | 100% | 100% |
+| **Schemas** | 100% | 100% | 100% | 100% |
+| **Utils** | 81.69% | 70.58% | 90% | 81.69% |
+| **Total** | **88.83%** | **81.61%** | **96.42%** | **88.83%** |
+
+### Infraestructura de Testing
+
+**Mocks de Cloudflare:**
+- `D1Database`: Mock completo con soporte para CRUD, queries complejas y PATCH parcial
+- `R2Bucket`: Mock de almacenamiento con put, get, delete, head, list
+
+**Context Helper:**
+- `createMockContext()`: Simula el contexto de Hono con bindings, variables, headers
+- `parseJsonResponse()`: Helper para parsear respuestas JSON
+- Soporte automático para extracción de parámetros de rutas
+
+**Características:**
+- ✅ Tests unitarios para todos los controllers
+- ✅ Tests de integración para auth middleware
+- ✅ Validación de schemas con Zod
+- ✅ Tests de utils (crypto, JWT)
+- ✅ Mocks realistas de Cloudflare Workers
+- ✅ UI interactivo con Vitest
+- ✅ Coverage con v8 provider
+
+### CI/CD con Tests
+
+Los tests se ejecutan automáticamente en cada push a `main` mediante GitHub Actions:
+
+```yaml
+- Run linter
+- Run tests ← Valida que todos los 143 tests pasen
+- Deploy (solo si tests pasan)
 ```
 
 ---
