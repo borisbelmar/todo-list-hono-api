@@ -272,7 +272,7 @@
     "@hono/zod-validator" "^0.7.4"
     openapi3-ts "^4.5.0"
 
-"@hono/zod-validator@^0.7.4", "@hono/zod-validator@^0.7.5":
+"@hono/zod-validator@^0.7.4":
   version "0.7.5"
   resolved "https://registry.yarnpkg.com/@hono/zod-validator/-/zod-validator-0.7.5.tgz#961e7ad719c2f58fb697ac56e00a68ee87da6034"
   integrity sha512-n4l4hutkfYU07PzRUHBOVzUEn38VSfrh+UVE5d0w4lyfWDOEhzxIupqo5iakRiJL44c3vTuFJBvcmUl8b9agIA==

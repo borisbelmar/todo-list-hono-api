@@ -1,5 +1,5 @@
 {
-  "name": "basic-hono-api",
+  "name": "todo-list-hono-api",
   "version": "1.0.2",
   "type": "module",
   "main": "src/index.ts",
@@ -13,7 +13,6 @@
   "dependencies": {
     "@hono/swagger-ui": "^0.5.2",
     "@hono/zod-openapi": "^1.1.5",
-    "@hono/zod-validator": "^0.7.5",
     "hono": "^4.10.6",
     "jose": "^6.1.2",
     "nanoid": "^5.1.6",

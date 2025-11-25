@@ -1,9 +1,10 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { swaggerUI } from '@hono/swagger-ui'
 import { cors } from 'hono/cors'
-import todoRouter from './routes/todo.routes'
-import authRouter from './routes/auth.routes'
-import imageRouter from './routes/image.routes'
+import authRouter from './routes/auth'
+import todoRouter from './routes/todo'
+import imageRouter from './routes/image'
+import { getPackageJson } from './utils/packageJson'
 
 type Bindings = {
   JWT_SECRET: string
@@ -70,7 +71,7 @@ app.get('/openapi.json', (c) => {
   const spec = app.getOpenAPIDocument({
     openapi: '3.0.0',
     info: {
-      version: '1.0.0',
+      version: getPackageJson().version,
       title: 'Todo List API',
       description: 'API REST completa con autenticación JWT, gestión de todos e imágenes con Cloudflare Workers, D1 y R2',
     },

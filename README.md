@@ -1,4 +1,4 @@
-# Basic Hono API
+# Basic Todo List API with Hono
 
 API REST completa construida con Hono, TypeScript, Cloudflare Workers y D1 Database.
 
@@ -11,12 +11,13 @@ API REST completa construida con Hono, TypeScript, Cloudflare Workers y D1 Datab
 - 🧹 **Limpieza automática** de imágenes huérfanas al actualizar/eliminar todos
 - 🗄️ **Cloudflare D1** como base de datos serverless (SQLite)
 - ✨ **Validación con Zod** en todas las rutas
-- 📖 **Documentación OpenAPI/Swagger** interactiva
+- 📖 **Documentación OpenAPI/Swagger** interactiva con autenticación global
 - 🎯 **TypeScript** con ESLint (Standard JS)
 - ⚡ **Desplegable en Cloudflare Workers**
 - 🔑 **Manejo seguro de secretos** con variables de entorno
 - 🚀 **CI/CD** con GitHub Actions para despliegue automático
 - 🏗️ **Arquitectura MVC** con controladores separados
+- 📦 **Estructura modular** con schemas y rutas OpenAPI organizadas
 
 ## 📋 Stack Tecnológico
 
@@ -35,39 +36,42 @@ API REST completa construida con Hono, TypeScript, Cloudflare Workers y D1 Datab
 
 ```
 src/
-├── controllers/          # Lógica de negocio
-│   ├── auth/            # Controladores de autenticación
-│   │   ├── register.controller.ts
-│   │   └── login.controller.ts
-│   ├── todo/            # Controladores de todos
-│   │   ├── list.controller.ts
-│   │   ├── get.controller.ts
-│   │   ├── create.controller.ts
-│   │   ├── update.controller.ts
-│   │   ├── patch.controller.ts
-│   │   └── delete.controller.ts
-│   └── image/           # Controladores de imágenes
-│       ├── upload.controller.ts
-│       ├── get.controller.ts
-│       └── delete.controller.ts
-├── routes/              # Definición de rutas
-│   ├── auth.routes.ts
-│   ├── todo.routes.ts
-│   └── image.routes.ts
-├── middleware/          # Middlewares personalizados
-│   └── auth.middleware.ts
-├── schemas/             # Schemas de validación Zod
-│   ├── auth.schema.ts
-│   ├── todo.schema.ts
-│   └── image.schema.ts
+├── controllers/          # Lógica de negocio (MVC)
+│   ├── auth/            # Registro y login
+│   ├── todo/            # CRUD de todos (6 controladores)
+│   └── image/           # Gestión de imágenes R2 (3 controladores)
+├── openapi/             # Definiciones OpenAPI separadas
+│   ├── schemas/         # Schemas Zod reutilizables
+│   │   ├── auth.schemas.ts
+│   │   ├── todo.schemas.ts
+│   │   └── image.schemas.ts
+│   └── routes/          # Definiciones createRoute()
+│       ├── auth.routes.openapi.ts
+│       ├── todo.routes.openapi.ts
+│       └── image.routes.openapi.ts
+├── routes/              # Routers Hono (un archivo por endpoint)
+│   ├── auth/
+│   │   ├── index.ts           # Router principal de auth
+│   │   ├── register.route.ts  # Definición de /register
+│   │   └── login.route.ts     # Definición de /login
+│   ├── todo/
+│   │   ├── index.ts           # Router principal de todos
+│   │   ├── list.route.ts      # GET /todos
+│   │   ├── get.route.ts       # GET /todos/:id
+│   │   ├── create.route.ts    # POST /todos
+│   │   ├── update.route.ts    # PUT /todos/:id
+│   │   ├── patch.route.ts     # PATCH /todos/:id
+│   │   └── delete.route.ts    # DELETE /todos/:id
+│   └── image/
+│       ├── index.ts           # Router principal de imágenes
+│       ├── upload.route.ts    # POST /images
+│       ├── get.route.ts       # GET /images/:userId/:imageId
+│       └── delete.route.ts    # DELETE /images/:userId/:imageId
+├── middleware/          # Middlewares (auth JWT)
+├── schemas/             # Schemas de validación runtime
 ├── types/               # Tipos TypeScript
-│   ├── user.types.ts
-│   └── todo.types.ts
-├── utils/               # Funciones utilitarias
-│   ├── jwt.ts
-│   ├── crypto.ts
-│   └── r2.ts
-└── index.ts             # Punto de entrada
+├── utils/               # Utilidades (JWT, crypto, R2)
+└── index.ts             # Entry point + configuración OpenAPI global
 ```
 
 ## 🛠️ Instalación y Desarrollo
@@ -127,17 +131,19 @@ yarn deploy
 
 ### 📖 Documentación Interactiva
 
-La API incluye documentación interactiva con Swagger UI:
+La API incluye documentación interactiva con Swagger UI y esquema de autenticación global:
 
 - **Swagger UI:** [http://localhost:8787/docs](http://localhost:8787/docs) (desarrollo)
 - **Swagger UI Producción:** [https://basic-hono-api.borisbelmarm.workers.dev/docs](https://basic-hono-api.borisbelmarm.workers.dev/docs)
 - **OpenAPI JSON:** `/openapi.json`
 
-La documentación Swagger UI permite:
+**Características de la documentación:**
 - ✨ Explorar todos los endpoints disponibles
-- 📝 Ver esquemas de request/response con Zod
+- 📝 Esquemas de request/response con Zod
 - 🧪 Probar las rutas directamente desde el navegador
-- 🔐 Configurar el token JWT para rutas protegidas
+- 🔐 **Autenticación global:** Botón "Authorize" para configurar el token JWT una sola vez
+- 🏷️ Endpoints organizados por tags (Auth, Todos, Images)
+- 📋 Ejemplos de uso en cada endpoint
 
 ### Base URL
 
@@ -188,6 +194,13 @@ GET /
 ---
 
 ### 🔐 Autenticación
+
+**Todas las rutas protegidas requieren:**
+```
+Authorization: Bearer {token}
+```
+
+**En Swagger UI:** Usa el botón "Authorize" (🔒) en la parte superior para configurar el token una sola vez. Se aplicará automáticamente a todos los endpoints protegidos.
 
 #### Registrar Usuario
 
@@ -602,73 +615,71 @@ curl -X DELETE http://localhost:8787/todos/{id} \
 
 ---
 
-## 📁 Estructura del Proyecto
+## 🏗️ Arquitectura
+
+### Patrón MVC con OpenAPI
+
+El proyecto sigue una arquitectura modular y escalable:
+
+**1. Controladores (Controllers):**
+- Contienen la lógica de negocio
+- Separados por dominio (auth, todo, image)
+- Independientes de la capa de presentación
+
+**2. Definiciones OpenAPI:**
+- Schemas Zod reutilizables en `src/openapi/schemas/`
+- Rutas OpenAPI con `createRoute()` en `src/openapi/routes/`
+- Documentación centralizada y mantenible
+
+**3. Routers (Routes):**
+- Organizados por dominio en subdirectorios (`auth/`, `todo/`, `image/`)
+- Cada endpoint en su propio archivo (ej: `login.route.ts`, `create.route.ts`)
+- Archivo `index.ts` en cada dominio que registra todos los endpoints
+- Ultra modular: fácil de encontrar y modificar endpoints específicos
+
+**4. Middleware:**
+- Autenticación JWT centralizada
+- Aplicado a nivel de router completo
+
+**5. Utilidades:**
+- Funciones reutilizables (JWT, crypto, R2)
+- Separación de responsabilidades
+
+### Beneficios de esta arquitectura:
+
+✅ **Mantenibilidad:** Código organizado y fácil de encontrar
+✅ **Escalabilidad:** Agregar nuevos endpoints es simple
+✅ **Reutilización:** Schemas compartidos entre rutas
+✅ **Documentación:** OpenAPI auto-generado desde código
+✅ **Testing:** Controladores testeables independientemente
+✅ **Legibilidad:** Archivos pequeños y enfocados
+
+---
+
+## 📁 Estructura del Proyecto Detallada
 
 ```
 basic-hono-api/
 ├── src/
-│   ├── middleware/
-│   │   └── auth.middleware.ts    # Middleware de autenticación JWT
-│   ├── routes/
-│   │   ├── auth.routes.ts        # Rutas de autenticación
-│   │   ├── todo.routes.ts        # Rutas CRUD de todos
-│   │   └── image.routes.ts       # Rutas de gestión de imágenes (R2)
-│   ├── schemas/
-│   │   ├── auth.schema.ts        # Validaciones Zod para auth
-│   │   ├── todo.schema.ts        # Validaciones Zod para todos
-│   │   └── image.schema.ts       # Validaciones Zod para imágenes
-│   ├── types/
-│   │   ├── user.types.ts         # Tipos TypeScript de usuarios
-│   │   └── todo.types.ts         # Tipos TypeScript de todos
-│   ├── utils/
-│   │   ├── crypto.ts             # Hashing de passwords (scrypt)
-│   │   ├── jwt.ts                # Generación/verificación JWT
-│   │   └── r2.ts                 # Utilidades para R2 (limpieza de imágenes)
-│   └── index.ts                  # Entry point
-├── migrations/
-│   ├── 001_create_todos_table.sql      # Migración inicial de todos
-│   ├── 002_create_users_table.sql      # Tabla de usuarios
-│   └── 003_add_user_id_to_todos.sql    # Relación user-todo
-├── bruno/
+│   ├── controllers/              # Lógica de negocio (MVC)
+│   ├── openapi/                  # Definiciones OpenAPI separadas
+│   │   ├── schemas/              # Schemas Zod reutilizables
+│   │   └── routes/               # createRoute() por dominio
+│   ├── routes/                   # Routers Hono (conectan OpenAPI + Controllers)
+│   ├── middleware/               # Middlewares (auth JWT)
+│   ├── schemas/                  # Schemas de validación runtime
+│   ├── types/                    # Tipos TypeScript
+│   ├── utils/                    # Utilidades (JWT, crypto, R2)
+│   └── index.ts                  # Entry point + OpenAPI global config
+├── migrations/                   # SQL migrations para D1
+├── bruno/                        # Colección de requests con Bruno
 │   ├── Auth/                     # Requests de autenticación
-│   │   ├── Register.bru          # POST /auth/register (guarda token)
-│   │   └── Login.bru             # POST /auth/login (guarda token)
 │   ├── Todos/                    # Requests CRUD de todos
-│   │   ├── List Todos.bru        # GET /todos
-│   │   ├── Get Todo.bru          # GET /todos/:id
-│   │   ├── Create Todo.bru       # POST /todos
-│   │   ├── Update Todo (PUT).bru # PUT /todos/:id
-│   │   ├── Update Todo (PATCH).bru # PATCH /todos/:id
-│   │   └── Delete Todo.bru       # DELETE /todos/:id
 │   ├── Images/                   # Requests de imágenes
-│   │   ├── Upload Image.bru      # POST /images
-│   │   ├── Get Image.bru         # GET /images/:userId/:imageId
-│   │   └── Delete Image.bru      # DELETE /images/:userId/:imageId
-│   ├── environments/             # Entornos (Local, Production)
-│   ├── Health Check.bru          # GET /health
-│   ├── API Info.bru              # GET /
-│   ├── bruno.json                # Configuración de colección
-│   └── .gitignore                # Ignora archivo de secrets
-├── .github/
-│   └── workflows/
-│       └── deploy.yml            # GitHub Actions para deploy automático
+│   └── environments/             # Entornos (Local, Production)
+├── .github/workflows/            # CI/CD con GitHub Actions
 ├── wrangler.toml                 # Config Cloudflare Workers + D1 + R2
 ├── .dev.vars                     # Variables de entorno local
-├── eslint.config.js              # Config ESLint
-├── tsconfig.json                 # Config TypeScript
-└── package.json
-```
-│   │   ├── crypto.ts             # Hashing de passwords (scrypt)
-│   │   └── jwt.ts                # Generación/verificación JWT
-│   └── index.ts                  # Entry point
-├── migrations/
-│   ├── 001_create_todos_table.sql      # Migración inicial de todos
-│   ├── 002_create_users_table.sql      # Tabla de usuarios
-│   └── 003_add_user_id_to_todos.sql    # Relación user-todo
-├── wrangler.toml                  # Config Cloudflare Workers
-├── .dev.vars                      # Variables de entorno local
-├── eslint.config.js               # Config ESLint
-├── tsconfig.json                  # Config TypeScript
 └── package.json
 ```
 
