@@ -4,3 +4,4 @@ dist
 .dev.vars
 *.log
 .env
+coverage
