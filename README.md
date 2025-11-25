@@ -11,6 +11,7 @@ API REST completa construida con Hono, TypeScript, Cloudflare Workers y D1 Datab
 - 🧹 **Limpieza automática** de imágenes huérfanas al actualizar/eliminar todos
 - 🗄️ **Cloudflare D1** como base de datos serverless (SQLite)
 - ✨ **Validación con Zod** en todas las rutas
+- 📖 **Documentación OpenAPI/Swagger** interactiva
 - 🎯 **TypeScript** con ESLint (Standard JS)
 - ⚡ **Desplegable en Cloudflare Workers**
 - 🔑 **Manejo seguro de secretos** con variables de entorno
@@ -19,12 +20,13 @@ API REST completa construida con Hono, TypeScript, Cloudflare Workers y D1 Datab
 
 ## 📋 Stack Tecnológico
 
-- **Framework:** Hono
+- **Framework:** Hono con OpenAPIHono
+- **Documentación:** Swagger UI + OpenAPI 3.0
 - **Runtime:** Cloudflare Workers
 - **Base de datos:** Cloudflare D1 (SQLite)
 - **Almacenamiento:** Cloudflare R2 (imágenes)
 - **Autenticación:** JWT (jose) + scrypt-js
-- **Validación:** Zod
+- **Validación:** Zod + @hono/zod-openapi
 - **IDs:** nanoid
 - **Linting:** ESLint (Standard JS)
 - **Package Manager:** Yarn
@@ -123,6 +125,20 @@ yarn deploy
 
 ## 📚 API Reference
 
+### 📖 Documentación Interactiva
+
+La API incluye documentación interactiva con Swagger UI:
+
+- **Swagger UI:** [http://localhost:8787/docs](http://localhost:8787/docs) (desarrollo)
+- **Swagger UI Producción:** [https://basic-hono-api.borisbelmarm.workers.dev/docs](https://basic-hono-api.borisbelmarm.workers.dev/docs)
+- **OpenAPI JSON:** `/openapi.json`
+
+La documentación Swagger UI permite:
+- ✨ Explorar todos los endpoints disponibles
+- 📝 Ver esquemas de request/response con Zod
+- 🧪 Probar las rutas directamente desde el navegador
+- 🔐 Configurar el token JWT para rutas protegidas
+
 ### Base URL
 
 - **Local:** `http://localhost:8787`
@@ -148,6 +164,25 @@ GET /health
 
 ```bash
 GET /
+```
+
+**Respuesta:**
+```json
+{
+  "message": "Bienvenido a la API con Hono",
+  "documentation": "/docs",
+  "openapi": "/openapi.json",
+  "endpoints": {
+    "health": "/health",
+    "auth": {
+      "register": "/auth/register",
+      "login": "/auth/login"
+    },
+    "todos": "/todos (requiere autenticación)",
+    "images": "/images (requiere autenticación)"
+  }
+}
+```
 ```
 
 ---
